@@ -166,7 +166,35 @@ def convert_latex_to_pdf(latex_content):
             
             # Generate PDF
             output_filename = temp_dir_path / "worksheet"
-            doc.generate_pdf(output_filename, clean_tex=False)
+            
+            # For Streamlit Cloud, we need to specify compiler explicitly
+            # and avoid using latexmk which might not be available
+            try:
+                doc.generate_pdf(
+                    output_filename, 
+                    clean_tex=False,
+                    compiler='pdflatex',  # Use pdflatex directly instead of latexmk
+                    compiler_args=[
+                        '-interaction=nonstopmode',
+                        '-halt-on-error'
+                    ]
+                )
+            except Exception as compiler_error:
+                # If the default compiler fails, try with a different approach
+                st.warning(f"First compilation attempt failed: {str(compiler_error)}. Trying with different settings...")
+                
+                # Write the TeX file directly
+                tex_path = output_filename.with_suffix('.tex')
+                doc.generate_tex(tex_path)
+                
+                # Run pdflatex manually
+                subprocess.run(
+                    ["pdflatex", "-interaction=nonstopmode", "-output-directory", 
+                     str(temp_dir_path), str(tex_path)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
             
             # Read the generated PDF
             pdf_path = output_filename.with_suffix('.pdf')
@@ -216,14 +244,21 @@ def convert_latex_to_pdf(latex_content):
                 if not pdflatex_available:
                     raise Exception("pdflatex is not available in the system path")
                 
-                # Run pdflatex twice to resolve references
-                for _ in range(2):
-                    subprocess.run(
-                        ["pdflatex", "-interaction=nonstopmode", "-output-directory", str(temp_dir_path), str(tex_file_path)],
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
-                    )
+                # Run pdflatex with specific options to avoid MiKTeX update checks
+                env = os.environ.copy()
+                if platform.system() == "Windows":
+                    # Disable MiKTeX update check on Windows
+                    env["MIKTEX_NOASK"] = "1"
+                
+                # Run pdflatex only once to avoid font generation issues
+                subprocess.run(
+                    ["pdflatex", "-interaction=nonstopmode", "-output-directory", 
+                     str(temp_dir_path), str(tex_file_path)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env
+                )
                 
                 # Read the generated PDF
                 pdf_path = temp_dir_path / "worksheet.pdf"
@@ -234,7 +269,11 @@ def convert_latex_to_pdf(latex_content):
                     raise Exception("PDF was not generated successfully")
                     
             except subprocess.CalledProcessError as e:
-                raise Exception(f"PDF generation failed: {e.stderr.decode('utf-8') if e.stderr else 'Unknown error'}")
+                error_output = e.stderr.decode('utf-8') if e.stderr else 'Unknown error'
+                # Truncate error message if it's too long
+                if len(error_output) > 500:
+                    error_output = error_output[:500] + "... (error message truncated)"
+                raise Exception(f"PDF generation failed: {error_output}")
             except Exception as e:
                 raise Exception(f"Error during PDF conversion: {str(e)}")
 
@@ -385,8 +424,8 @@ if submit_button:
             # Clear the status container
             status_container.empty()
             
-            # Create tabs for different formats
-            tab1, tab2, tab3 = st.tabs(["Markdown", "LaTeX", "PDF"])
+            # Create tabs for different formats (removed LaTeX tab)
+            tab1, tab2 = st.tabs(["Markdown", "PDF"])
             
             with tab1:
                 st.subheader("Markdown Format")
@@ -399,62 +438,6 @@ if submit_button:
                 )
             
             with tab2:
-                st.subheader("LaTeX Format")
-                
-                # Display LaTeX code
-                with st.expander("View LaTeX Code", expanded=False):
-                    st.code(latex_content, language="latex")
-                
-                # Render LaTeX
-                st.subheader("Rendered LaTeX Preview")
-                try:
-                    # Prepare LaTeX content for rendering
-                    prepared_latex = prepare_latex_for_rendering(latex_content)
-                    
-                    # Render in smaller chunks if needed
-                    if len(prepared_latex) > 5000:
-                        st.warning("The LaTeX content is large and has been split into sections for rendering.")
-                        sections = prepared_latex.split('\\section')
-                        
-                        if len(sections) > 1:
-                            for i, section in enumerate(sections[:3]):  # Limit to first 3 sections
-                                if i > 0:
-                                    section_content = "\\section" + section
-                                else:
-                                    section_content = section
-                                    
-                                if section_content.strip():
-                                    st.subheader(f"Section {i+1}")
-                                    st.latex(section_content)
-                            
-                            if len(sections) > 3:
-                                st.info(f"{len(sections)-3} more sections not shown. Download the full LaTeX file to view all content.")
-                        else:
-                            # Split by paragraphs if no sections
-                            paragraphs = prepared_latex.split('\n\n')
-                            for i, para in enumerate(paragraphs[:5]):  # Limit to first 5 paragraphs
-                                if para.strip():
-                                    st.latex(para)
-                            
-                            if len(paragraphs) > 5:
-                                st.info(f"{len(paragraphs)-5} more paragraphs not shown. Download the full LaTeX file to view all content.")
-                    else:
-                        # Render the entire content if it's not too large
-                        st.latex(prepared_latex)
-                        
-                except Exception as latex_error:
-                    st.error(f"Could not render LaTeX: {str(latex_error)}")
-                    st.info("The LaTeX code may contain syntax errors or be too complex for direct rendering. You can still download the file and use a LaTeX editor.")
-                
-                # Download button
-                st.download_button(
-                    label="Download LaTeX",
-                    data=latex_content,
-                    file_name=f"{subject.replace(' ', '_')}_worksheet.tex",
-                    mime="text/plain",
-                )
-                
-            with tab3:
                 st.subheader("PDF Format")
                 
                 try:

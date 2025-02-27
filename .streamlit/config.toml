@@ -1,0 +1,12 @@
+[server]
+maxMessageSize = 200
+maxUploadSize = 200
+enableXsrfProtection = false
+
+[runner]
+# Increase timeout to allow for PDF generation
+fastReruns = false
+commandTimeout = 120
+
+[browser]
+gatherUsageStats = false 
