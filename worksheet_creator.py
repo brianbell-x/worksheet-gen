@@ -37,6 +37,8 @@ with st.sidebar:
         st.warning("⚠️ No API key found in .env file. Please create a .env file with your OPENAI_API_KEY.")
     else:
         st.success("✅ API key loaded from .env file")
+    st.markdown("---")
+    st.caption("v0.1.0")
 
 # Main form
 st.subheader("Worksheet Details")
