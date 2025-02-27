@@ -1,60 +1,71 @@
 # Student Worksheet Creator
 
-A Streamlit application that uses OpenAI to generate customized student worksheets for various subjects and grade levels.
+A Streamlit application that uses OpenAI to generate customized student worksheets in both Markdown and PDF formats.
 
 ## Features
 
-- Generate high-quality educational worksheets using OpenAI
-- Customize worksheets by subject, grade level, and learning objectives
-- Get worksheets in both Markdown and LaTeX formats
-- Download worksheets in your preferred format
-- Simple and intuitive user interface
+- Generate educational worksheets based on subject, grade level, and learning objectives
+- Customize with additional details and requirements
+- Get worksheets in both Markdown and PDF formats
+- Download worksheets for offline use or printing
 
-## Requirements
+## Setup
 
-- Python 3.7+
+### Prerequisites
+
+- Python 3.7 or higher
+- LaTeX (for PDF generation)
 - OpenAI API key
 
-## Installation
+### Installation
 
-1. Clone this repository or download the files
-2. Install the required dependencies:
+1. Clone this repository:
+   ```bash
+   git clone <repository-url>
+   cd worksheet-creator
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+2. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. Create a `.env` file in the root directory with your OpenAI API key:
+3. Set up environment variables:
+   - Create a `.env` file in the project root directory
+   - Add your OpenAI API key to the `.env` file:
+     ```
+     OPENAI_API_KEY=your_api_key_here
+     ```
 
-```bash
-# Copy the example file
-cp .env.example .env
+### Running Locally
 
-# Edit the .env file and add your API key
-# OPENAI_API_KEY=your_openai_api_key_here
-```
-
-## Usage
-
-1. Run the Streamlit app:
-
+Run the Streamlit app:
 ```bash
 streamlit run worksheet_creator.py
 ```
 
-2. Access the application in your web browser (typically at http://localhost:8501)
-3. Fill in the worksheet details:
-   - Subject/Topic
-   - Target Audience (Grade/Age Level)
-   - Learning Objectives
-   - Optional Details (if needed)
-4. Click "Generate Worksheet" to create your worksheet
-5. View the generated worksheet in either Markdown or LaTeX format using the tabs
-6. Download the worksheet in your preferred format
+The app will be available at http://localhost:8501
 
-## Notes
+### Deployment to Streamlit Cloud
 
-- The application uses the OpenAI o3-mini-2025-01-31 model
-- Your OpenAI API key is loaded from the `.env` file
-- The LaTeX conversion is performed by a second API call to OpenAI
-- You can use the LaTeX format for professional printing or academic publishing 
+1. Push the code to GitHub
+2. Connect your GitHub repository to Streamlit Cloud
+3. Set the `OPENAI_API_KEY` secret in the Streamlit Cloud dashboard
+4. Deploy
+
+## Requirements
+
+See `requirements.txt` for Python package dependencies.
+
+The `packages.txt` file includes system dependencies for LaTeX that are needed for PDF generation when deploying on Streamlit Cloud.
+
+## Troubleshooting
+
+If PDF generation doesn't work:
+- Ensure LaTeX is properly installed
+- For Streamlit Cloud deployment, check that the `packages.txt` file is present
+- Try downloading the LaTeX file instead and compile it locally
+
+## License
+
+[MIT License](LICENSE) 

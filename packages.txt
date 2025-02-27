@@ -1,8 +1,9 @@
 texlive-latex-base
+texlive-latex-recommended
 texlive-fonts-recommended
-texlive-fonts-extra
 texlive-latex-extra
-texlive-xetex
+texlive-fonts-extra
+tex-common
 latexmk
 texlive-science
 texlive-plain-generic

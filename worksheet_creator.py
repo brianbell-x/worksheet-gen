@@ -35,8 +35,6 @@ with st.sidebar:
     st.markdown("---")
     if not api_key:
         st.warning("⚠️ No API key found in .env file. Please create a .env file with your OPENAI_API_KEY.")
-    else:
-        st.success("✅ API key loaded from .env file")
     st.markdown("---")
     st.caption("v0.1.0")
 
@@ -167,7 +165,7 @@ def convert_latex_to_pdf(latex_content):
             doc.append(NoEscape(latex_content))
             
             # Generate PDF
-            output_filename = temp_dir_path / "worksheet"
+            output_filename = str(temp_dir_path / "worksheet")
             
             # For Streamlit Cloud, we need to specify compiler explicitly
             # and avoid using latexmk which might not be available
@@ -186,8 +184,8 @@ def convert_latex_to_pdf(latex_content):
                 st.warning(f"First compilation attempt failed: {str(compiler_error)}. Trying with different settings...")
                 
                 # Write the TeX file directly
-                tex_path = output_filename.with_suffix('.tex')
-                doc.generate_tex(tex_path)
+                tex_path = temp_dir_path / "worksheet.tex"
+                doc.generate_tex(str(tex_path))
                 
                 # Run pdflatex manually
                 subprocess.run(
@@ -199,7 +197,7 @@ def convert_latex_to_pdf(latex_content):
                 )
             
             # Read the generated PDF
-            pdf_path = output_filename.with_suffix('.pdf')
+            pdf_path = temp_dir_path / "worksheet.pdf"
             if pdf_path.exists():
                 with open(pdf_path, "rb") as pdf_file:
                     return pdf_file.read()
